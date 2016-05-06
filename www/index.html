@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html ng-csp>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+
+  <script src="components/loader.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+
+  <link rel="stylesshet" href="components/monaca-onsenui/js/angular/angular-csp.css">
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<ons-page>
+  <ons-toolbar>
+    <div class="center">ku-map</div>
+  </ons-toolbar>
+  <ons-tabbar position="top" var="tabbar">
+    <ons-tab persistent icon="map-marker" page="kumap.html" label="map"></ons-tab>
+    <ons-tab persistent icon="history" page="history.html" label="history" active="true"></ons-tab>
+  </ons-tabbar>
+</ons-page>
+
+<ons-template id="kumap.html">
+  <ons-page>
+    <div id="map" style="width:300px; height:400px;"></div>
+  </ons-page>
+</ons-template>
+
+<ons-template id="history.html">
+  <ons-page>
+    <ons-list id="history"></ons-list>
+  </ons-page>
+</ons-template>
+
+<script>
+ons.bootstrap();
+var map;
+
+var markers = new Array();
+var zIndex = 0;
+
+var flg = true;
+
+function initMap() {
+  if(navigator.geolocation) {
+    tabbar.setActiveTab(0);
+    navigator.geolocation.getCurrentPosition(successFunc, errorFunc, optionObj);
+  } else {
+    alert("この端末は位置情報を取得できないため、この機能を利用できません。");
+  }
+}
+
+function successFunc(position) {
+  var lat = position.coords.latitude;
+  var lng = position.coords.longitude;
+
+  var latlng = new google.maps.LatLng(lat, lng);
+  var opts = {
+    zoom: 18,
+    center: latlng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+  map = new google.maps.Map(document.getElementById("map"), opts);
+
+  addMarker(position);
+}
+
+function updateMap() {
+  if (flg) { 
+    setTimeout(
+      function() {
+        navigator.geolocation.getCurrentPosition(addMarker, errorFunc, optionObj)
+      }, 2000);
+  }
+}
+
+function addMarker(position) {
+  var lat = position.coords.latitude;
+  var lng = position.coords.longitude;
+  zIndex++;
+  for (var i = 0; i < markers.length; i++) {
+    markers[i].setIcon(imgHistory());
+  }
+  markers.push(createMapMarker(lat, lng, imgHere()));
+  addHistory("lat:" + lat + " lng:" + lng);
+  updateMap();
+}
+
+function errorFunc(error) {
+  // エラーコードのメッセージを定義
+  var errorMessage = {
+    0: "原因不明のエラーが発生しました…。" ,
+    1: "位置情報の取得が許可されませんでした…。" ,
+    2: "電波状況などで位置情報が取得できませんでした…。" ,
+    3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました…。" ,
+  };
+  // エラーコードに合わせたエラー内容をアラート表示
+  addHistory(errorMessage[error.code]);
+  sleepUpdateMap();
+}
+
+var optionObj = {
+  "enableHighAccuracy": false ,
+  "timeout": 8000 ,
+  "maximumAge": 5000 ,
+};
+
+function switchMode() {
+  flg = !flg;
+  dispBtn();
+  sleepUpdateMap();
+}
+
+function createMapMarker(lat, lng, img) {
+  var latlng = new google.maps.LatLng(lat, lng);
+  var marker = {
+    position: latlng,
+    map: map,
+    icon: img,
+    zIndex: zIndex
+  }
+  return new google.maps.Marker(marker);
+}
+
+function addHistory(text) {
+  var historyRow = $("<ons-list-item style='line-height:100%;''>");
+  var historyDl = $("<dl>");
+  var historyDt = $("<dt>");
+  var historyDd = $("<dd>");
+
+  historyRow.append(historyDl.append(historyDt).append(historyDd));
+
+  var date = new Date();
+  var strDate = zeroPadding(date.getHours(), 2) + ":" + 
+                zeroPadding(date.getMinutes(), 2) + ":" + 
+                zeroPadding(date.getSeconds(), 2);
+  historyDt.html(strDate);
+  historyDd.html(text);
+
+  $("#history").prepend(historyRow);
+}
+
+function zeroPadding(val, len) {
+  var str = Array(len + 1).join("0");
+  return (str + val).slice(-1 * len);
+}
+
+function imgHere() {
+  return "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.7|0|FFF|7|_|%20^%20%CF%89%20^%20";
+}
+
+function imgHistory() {
+  return "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.7|0|000|0"
+}
+</script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDrVeFpFWX_te18eN6bb2Et3Gt8mp8d5s&callback=initMap">
+</script>
+
+</body>
+</html>
