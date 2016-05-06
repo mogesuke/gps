@@ -26,7 +26,7 @@
 
 <ons-template id="kumap.html">
   <ons-page>
-    <div id="map" style="width:300px; height:400px;"></div>
+    <div id="map" style="width:100%; height:100%;"></div>
   </ons-page>
 </ons-template>
 
@@ -43,18 +43,18 @@ var map;
 var markers = new Array();
 var zIndex = 0;
 
-var flg = true;
+var watchId;
 
 function initMap() {
   if(navigator.geolocation) {
     tabbar.setActiveTab(0);
-    navigator.geolocation.getCurrentPosition(successFunc, errorFunc, optionObj);
+    navigator.geolocation.getCurrentPosition(createMap, errorFunc, optionObj);
   } else {
     alert("この端末は位置情報を取得できないため、この機能を利用できません。");
   }
 }
 
-function successFunc(position) {
+function createMap(position) {
   var lat = position.coords.latitude;
   var lng = position.coords.longitude;
 
@@ -67,27 +67,22 @@ function successFunc(position) {
   map = new google.maps.Map(document.getElementById("map"), opts);
 
   addMarker(position);
+  watchId = navigator.geolocation.watchPosition(addMarker , errorFunc , optionObj) ;
 }
 
-function updateMap() {
-  if (flg) { 
-    setTimeout(
-      function() {
-        navigator.geolocation.getCurrentPosition(addMarker, errorFunc, optionObj)
-      }, 2000);
-  }
+function markingMap(position) {
+  addMarker(position);
 }
 
 function addMarker(position) {
   var lat = position.coords.latitude;
   var lng = position.coords.longitude;
-  zIndex++;
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setIcon(imgHistory());
+  if (zIndex != 0) {
+    markers[zIndex - 1].setIcon(imgHistory());
   }
+  zIndex++;
   markers.push(createMapMarker(lat, lng, imgHere()));
   addHistory("lat:" + lat + " lng:" + lng);
-  updateMap();
 }
 
 function errorFunc(error) {
@@ -100,20 +95,13 @@ function errorFunc(error) {
   };
   // エラーコードに合わせたエラー内容をアラート表示
   addHistory(errorMessage[error.code]);
-  sleepUpdateMap();
 }
 
 var optionObj = {
-  "enableHighAccuracy": false ,
-  "timeout": 8000 ,
-  "maximumAge": 5000 ,
+  "enableHighAccuracy": true,
+  "timeout": 5000,
+  "maximumAge": 5000,
 };
-
-function switchMode() {
-  flg = !flg;
-  dispBtn();
-  sleepUpdateMap();
-}
 
 function createMapMarker(lat, lng, img) {
   var latlng = new google.maps.LatLng(lat, lng);
@@ -134,14 +122,17 @@ function addHistory(text) {
 
   historyRow.append(historyDl.append(historyDt).append(historyDd));
 
-  var date = new Date();
-  var strDate = zeroPadding(date.getHours(), 2) + ":" + 
-                zeroPadding(date.getMinutes(), 2) + ":" + 
-                zeroPadding(date.getSeconds(), 2);
-  historyDt.html(strDate);
+  historyDt.html(getDate());
   historyDd.html(text);
 
   $("#history").prepend(historyRow);
+}
+
+function getDate() {
+  var date = new Date();
+  return zeroPadding(date.getHours(), 2) + ":" + 
+                zeroPadding(date.getMinutes(), 2) + ":" + 
+                zeroPadding(date.getSeconds(), 2);
 }
 
 function zeroPadding(val, len) {
