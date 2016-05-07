@@ -6,7 +6,6 @@
   <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
 
   <script src="components/loader.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 
   <link rel="stylesshet" href="components/monaca-onsenui/js/angular/angular-csp.css">
   <link rel="stylesheet" href="components/loader.css">
@@ -22,11 +21,18 @@
     <ons-tab persistent icon="map-marker" page="kumap.html" label="map"></ons-tab>
     <ons-tab persistent icon="history" page="history.html" label="history" active="true"></ons-tab>
   </ons-tabbar>
+  <ons-bottom-toolbar>
+    <div style="text-align: center;">
+      <ons-toolbar-button id="markingBtn">
+        <ons-icon icon="map-marker" label="mark" size="28px"></ons-icon>
+      </ons-toolbar-button>
+    </div>
+  </ons-bottom-toolbar>ons-bottom-toolbar>
 </ons-page>
 
 <ons-template id="kumap.html">
   <ons-page>
-    <div id="map" style="width:300px; height:400px;"></div>
+    <div id="map" style="width:400px; height:500px;"></div>
   </ons-page>
 </ons-template>
 
@@ -38,23 +44,30 @@
 
 <script>
 ons.bootstrap();
+
 var map;
 
 var markers = new Array();
 var zIndex = 0;
 
-var flg = true;
+var watchId;
+
+$(function() {
+  $("#markingBtn").on("click", function() {
+    navigator.geolocation.getCurrentPosition(addMarker, errorFunc, optionObj);
+  });
+});
 
 function initMap() {
   if(navigator.geolocation) {
     tabbar.setActiveTab(0);
-    navigator.geolocation.getCurrentPosition(successFunc, errorFunc, optionObj);
+    navigator.geolocation.getCurrentPosition(createMap, errorFunc, optionObj);
   } else {
     alert("この端末は位置情報を取得できないため、この機能を利用できません。");
   }
 }
 
-function successFunc(position) {
+function createMap(position) {
   var lat = position.coords.latitude;
   var lng = position.coords.longitude;
 
@@ -65,29 +78,19 @@ function successFunc(position) {
     mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById("map"), opts);
-
+  
   addMarker(position);
-}
-
-function updateMap() {
-  if (flg) { 
-    setTimeout(
-      function() {
-        navigator.geolocation.getCurrentPosition(addMarker, errorFunc, optionObj)
-      }, 2000);
-  }
 }
 
 function addMarker(position) {
   var lat = position.coords.latitude;
   var lng = position.coords.longitude;
-  zIndex++;
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setIcon(imgHistory());
+  if (zIndex != 0) {
+    markers[zIndex - 1].setIcon(imgHistory());
   }
+  zIndex++;
   markers.push(createMapMarker(lat, lng, imgHere()));
   addHistory("lat:" + lat + " lng:" + lng);
-  updateMap();
 }
 
 function errorFunc(error) {
@@ -99,21 +102,15 @@ function errorFunc(error) {
     3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました…。" ,
   };
   // エラーコードに合わせたエラー内容をアラート表示
+  console.log(error.message);
   addHistory(errorMessage[error.code]);
-  sleepUpdateMap();
 }
 
 var optionObj = {
-  "enableHighAccuracy": false ,
-  "timeout": 8000 ,
-  "maximumAge": 5000 ,
+  "enableHighAccuracy": false,
+  "timeout": 5000,
+  "maximumAge": 0,
 };
-
-function switchMode() {
-  flg = !flg;
-  dispBtn();
-  sleepUpdateMap();
-}
 
 function createMapMarker(lat, lng, img) {
   var latlng = new google.maps.LatLng(lat, lng);
@@ -134,14 +131,17 @@ function addHistory(text) {
 
   historyRow.append(historyDl.append(historyDt).append(historyDd));
 
-  var date = new Date();
-  var strDate = zeroPadding(date.getHours(), 2) + ":" + 
-                zeroPadding(date.getMinutes(), 2) + ":" + 
-                zeroPadding(date.getSeconds(), 2);
-  historyDt.html(strDate);
+  historyDt.html(getDate());
   historyDd.html(text);
 
   $("#history").prepend(historyRow);
+}
+
+function getDate() {
+  var date = new Date();
+  return zeroPadding(date.getHours(), 2) + ":" + 
+                zeroPadding(date.getMinutes(), 2) + ":" + 
+                zeroPadding(date.getSeconds(), 2);
 }
 
 function zeroPadding(val, len) {
