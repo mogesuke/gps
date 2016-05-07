@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
 
   <script src="components/loader.js"></script>
+  <script src="components/monaca-jquery/jquery.js"></script>
 
   <link rel="stylesshet" href="components/monaca-onsenui/js/angular/angular-csp.css">
   <link rel="stylesheet" href="components/loader.css">
@@ -18,7 +19,7 @@
     <div class="center">ku-map</div>
   </ons-toolbar>
   <ons-tabbar position="top" var="tabbar">
-    <ons-tab persistent icon="map" page="kumap.html" label="map"></ons-tab>
+    <ons-tab persistent icon="ion-map" page="kumap.html" label="map"></ons-tab>
     <ons-tab persistent icon="history" page="history.html" label="history" active="true"></ons-tab>
   </ons-tabbar>
   <ons-bottom-toolbar>
@@ -42,69 +43,25 @@
   </ons-page>
 </ons-template>
 
+<script src="js/kumap.js"></script>
 <script>
 ons.bootstrap();
 
-var map;
-
-var markers = new Array();
-var zIndex = 0;
-
-var watchId;
+function initGmap() {
+  tabbar.setActiveTab(0);
+  setTimeout(function() {createMap("map");}, 100);
+  
+  if(navigator.geolocation) {
+    $("#markingBtn").on("click", function() {
+      navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
+    });
+  } else {
+    $("#markingBtn").html("GPS非対応");
+  }
+}
 
 $(function() {
-  $("#markingBtn").on("click", function() {
-    navigator.geolocation.getCurrentPosition(addMarker, errorFunc, optionObj);
-  });
 });
-
-function initMap() {
-  if(navigator.geolocation) {
-    tabbar.setActiveTab(0);
-    navigator.geolocation.getCurrentPosition(createMap, errorFunc, optionObj);
-  } else {
-    alert("この端末は位置情報を取得できないため、この機能を利用できません。");
-  }
-}
-
-function createMap(position) {
-  var lat = position.coords.latitude;
-  var lng = position.coords.longitude;
-
-  var latlng = new google.maps.LatLng(lat, lng);
-  var opts = {
-    zoom: 18,
-    center: latlng,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  };
-  map = new google.maps.Map(document.getElementById("map"), opts);
-  
-  addMarker(position);
-}
-
-function addMarker(position) {
-  var lat = position.coords.latitude;
-  var lng = position.coords.longitude;
-  if (zIndex != 0) {
-    markers[zIndex - 1].setIcon(imgHistory());
-  }
-  zIndex++;
-  markers.push(createMapMarker(lat, lng, imgHere()));
-  addHistory("lat:" + lat + " lng:" + lng);
-}
-
-function errorFunc(error) {
-  // エラーコードのメッセージを定義
-  var errorMessage = {
-    0: "原因不明のエラーが発生しました…。" ,
-    1: "位置情報の取得が許可されませんでした…。" ,
-    2: "電波状況などで位置情報が取得できませんでした…。" ,
-    3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました…。" ,
-  };
-  // エラーコードに合わせたエラー内容をアラート表示
-  console.log(error.message);
-  addHistory(errorMessage[error.code]);
-}
 
 var optionObj = {
   "enableHighAccuracy": false,
@@ -112,15 +69,13 @@ var optionObj = {
   "maximumAge": 500,
 };
 
-function createMapMarker(lat, lng, img) {
-  var latlng = new google.maps.LatLng(lat, lng);
-  var marker = {
-    position: latlng,
-    map: map,
-    icon: img,
-    zIndex: zIndex
-  }
-  return new google.maps.Marker(marker);
+function markingSuccess(position) {
+  createMapMarker(position.coords.latitude, position.coords.longitude, getHereImg(), getHistoryImg());
+  addHistory(position.coords.latitude + ", " + position.coords.longitude);
+}
+
+function markingFail(error) {
+  addHistory(getErrorMsg(error));
 }
 
 function addHistory(text) {
@@ -149,16 +104,17 @@ function zeroPadding(val, len) {
   return (str + val).slice(-1 * len);
 }
 
-function imgHere() {
+function getHereImg() {
   return "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.7|0|FFF|7|_|%20^%20%CF%89%20^%20";
 }
 
-function imgHistory() {
+function getHistoryImg() {
   return "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.7|0|000|0"
 }
+
 </script>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDrVeFpFWX_te18eN6bb2Et3Gt8mp8d5s&callback=initMap">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDrVeFpFWX_te18eN6bb2Et3Gt8mp8d5s&callback=initGmap">
 </script>
 
 </body>
