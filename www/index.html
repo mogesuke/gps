@@ -6,7 +6,6 @@
   <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
 
   <script src="components/loader.js"></script>
-  <script src="components/monaca-jquery/jquery.js"></script>
 
   <link rel="stylesshet" href="components/monaca-onsenui/js/angular/angular-csp.css">
   <link rel="stylesheet" href="components/loader.css">
@@ -25,7 +24,7 @@
   <ons-bottom-toolbar>
     <div class="center">
       <ons-toolbar-button id="markingBtn">
-        <ons-icon icon="map-marker" label="mark" size="28px"></ons-icon>
+        <ons-icon icon="map-marker" label="mark" size="28px"> Where am I?</ons-icon>
       </ons-toolbar-button>
     </div>
   </ons-bottom-toolbar>ons-bottom-toolbar>
@@ -60,13 +59,10 @@ function initGmap() {
   }
 }
 
-$(function() {
-});
-
 var optionObj = {
   "enableHighAccuracy": false,
   "timeout":10000,
-  "maximumAge": 500,
+  "maximumAge": 0,
 };
 
 function markingSuccess(position) {
@@ -75,7 +71,15 @@ function markingSuccess(position) {
 }
 
 function markingFail(error) {
-  addHistory(getErrorMsg(error));
+  var errorMsg = getErrorMsg(error);
+  addHistory(errorMsg);
+  ons.notification.alert({
+  title: '位置情報の取得に失敗しました',
+  message: errorMsg,
+  buttonLabel: 'OK',
+  animation: 'default',
+});
+  
 }
 
 function addHistory(text) {
@@ -111,7 +115,6 @@ function getHereImg() {
 function getHistoryImg() {
   return "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.7|0|000|0"
 }
-
 </script>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDrVeFpFWX_te18eN6bb2Et3Gt8mp8d5s&callback=initGmap">
