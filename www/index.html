@@ -23,16 +23,19 @@
   </ons-tabbar>
   <ons-bottom-toolbar>
     <div class="center">
-      <ons-toolbar-button id="markingBtn">
+      <ons-button modifier="large" id="markingBtn">
         <ons-icon icon="map-marker" label="mark" size="28px"> Where am I?</ons-icon>
-      </ons-toolbar-button>
+      </ons-button>
     </div>
   </ons-bottom-toolbar>ons-bottom-toolbar>
 </ons-page>
 
 <ons-template id="kumap.html">
   <ons-page>
-    <div id="map" style="width:100%; height:100%;"></div>
+    <div id="map" style="width:100%; height:100%;">
+      <div class="center">
+         <div style="padding-top:100px"><ons-icon size="35px" spin="true" icon="ion-load-d"></ons-icon> now create map... </div>
+    </div>
   </ons-page>
 </ons-template>
 
@@ -52,6 +55,7 @@ function initGmap() {
   
   if(navigator.geolocation) {
     $("#markingBtn").on("click", function() {
+      starOonsBtnSpin("#markingBtn");
       navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
     });
   } else {
@@ -68,18 +72,19 @@ var optionObj = {
 function markingSuccess(position) {
   createMapMarker(position.coords.latitude, position.coords.longitude, getHereImg(), getHistoryImg());
   addHistory(position.coords.latitude + ", " + position.coords.longitude);
+  stopOnsBtnSpin("#markingBtn");
 }
 
 function markingFail(error) {
   var errorMsg = getErrorMsg(error);
   addHistory(errorMsg);
   ons.notification.alert({
-  title: '位置情報の取得に失敗しました',
-  message: errorMsg,
-  buttonLabel: 'OK',
-  animation: 'default',
-});
-  
+    title: '位置情報の取得に失敗しました',
+    message: errorMsg,
+    buttonLabel: 'OK',
+    animation: 'default',
+  });
+  stopOnsBtnSpin("#markingBtn");
 }
 
 function addHistory(text) {
@@ -106,6 +111,22 @@ function getDate() {
 function zeroPadding(val, len) {
   var str = Array(len + 1).join("0");
   return (str + val).slice(-1 * len);
+}
+
+function starOonsBtnSpin(selector) {
+  var markingBtn = ons.findComponent(selector, document.body);
+  markingBtn.startSpin();
+  markingBtn.setDisabled(true);
+}
+
+function stopOnsBtnSpin(selector) {
+  var markingBtn = ons.findComponent(selector, document.body);
+  if (markingBtn.isSpinning()) {
+    markingBtn.stopSpin();
+  }
+  if (markingBtn.isDisabled()) {
+    markingBtn.setDisabled(false);
+  }
 }
 
 function getHereImg() {
