@@ -55,7 +55,11 @@ function initGmap() {
   if(navigator.geolocation) {
     $("#markingBtn").on("click", function() {
       starOonsBtnSpin("#markingBtn");
-      navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
+      setTimeout(
+        function() {
+          navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
+        }
+      );
     });
   } else {
     $("#markingBtn").html("GPS非対応");
