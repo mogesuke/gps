@@ -58,7 +58,7 @@ function initGmap() {
       setTimeout(
         function() {
           navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
-        }
+        }, 100
       );
     });
   } else {
