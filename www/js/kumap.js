@@ -3,10 +3,13 @@ var map;
 var markers = new Array();
 var zIndex = 0;
 
-function createMap(mapId) {
-  var lat = "35.39291572";
-  var lng = "139.44288869";
-
+function createMap(mapId, lat, lng) {
+  if (lat == null) {
+    lat = "35.39291572";
+  }
+  if (lng == null) {
+    lng = "139.44288869";
+  }
   var latlng = new google.maps.LatLng(lat, lng);
   var opts = {
     zoom: 18,
