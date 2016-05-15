@@ -19,6 +19,7 @@
   </ons-toolbar>
   <ons-tabbar position="top" var="tabbar">
     <ons-tab persistent icon="ion-map" page="kumap.html" label="map"></ons-tab>
+    <ons-tab persistent icon="search" page="search.html" label="search"></ons-tab>
     <ons-tab persistent icon="history" page="history.html" label="history" active="true"></ons-tab>
   </ons-tabbar>
   <ons-bottom-toolbar>
@@ -38,6 +39,12 @@
   </ons-page>
 </ons-template>
 
+<ons-template id="search.html">
+  <ons-page>
+    <div>map</div>
+  </ons-page>
+</ons-template>
+
 <ons-template id="history.html">
   <ons-page>
     <ons-list id="history"></ons-list>
@@ -54,7 +61,7 @@ function initGmap() {
   
   if(navigator.geolocation) {
     $("#markingBtn").on("click", function() {
-      starOonsBtnSpin("#markingBtn");
+      startLoading("#markingBtn");
       setTimeout(
         function() {
           navigator.geolocation.getCurrentPosition(markingSuccess, markingFail, optionObj);
@@ -68,14 +75,14 @@ function initGmap() {
 
 var optionObj = {
   "enableHighAccuracy": false,
-  "timeout":10000,
+  "timeout":30000,
   "maximumAge": 0,
 };
 
 function markingSuccess(position) {
   createMapMarker(position.coords.latitude, position.coords.longitude, getHereImg(), getHistoryImg());
   addHistory(position.coords.latitude + ", " + position.coords.longitude);
-  stopOnsBtnSpin("#markingBtn");
+  stopLoading("#markingBtn");
 }
 
 function markingFail(error) {
@@ -87,7 +94,7 @@ function markingFail(error) {
     buttonLabel: 'OK',
     animation: 'default',
   });
-  stopOnsBtnSpin("#markingBtn");
+  stopLoading("#markingBtn");
 }
 
 function addHistory(text) {
@@ -116,17 +123,18 @@ function zeroPadding(val, len) {
   return (str + val).slice(-1 * len);
 }
 
-function starOonsBtnSpin(selector) {
+function startLoading(selector) {
+  var cover = $("<div id='loading' class='loadingCover'>");
+  cover.append($("<div class='loadingIcon'>").append($("<ons-icon class='fa fa-spinner loadingChr' spin='true'>")));
+  
+  $("body").prepend(cover);
   var markingBtn = ons.findComponent(selector, document.body);
-  markingBtn.startSpin();
   markingBtn.setDisabled(true);
 }
 
-function stopOnsBtnSpin(selector) {
+function stopLoading(selector) {
+  $("#loading").remove();
   var markingBtn = ons.findComponent(selector, document.body);
-  if (markingBtn.isSpinning()) {
-    markingBtn.stopSpin();
-  }
   if (markingBtn.isDisabled()) {
     markingBtn.setDisabled(false);
   }

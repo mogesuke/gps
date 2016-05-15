@@ -2,3 +2,29 @@
 .center {
   text-align: center;
 }
+
+.loadingCover {
+    position: fixed;
+    top:0;
+    left:0;
+    height: 100%;
+    width: 100%;
+    background-color: black;
+    opacity: 0.6;
+    z-index: 99999999;
+}
+
+.loadingIcon {
+  height: 100%;
+  width: 100%;
+  margin-top: 40%;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.loadingChr {
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12em;
+}
