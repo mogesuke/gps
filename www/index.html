@@ -18,17 +18,10 @@
     <div class="center">ku-map</div>
   </ons-toolbar>
   <ons-tabbar position="top" var="tabbar">
+  
     <ons-tab persistent icon="ion-map" page="kumap.html" label="map"></ons-tab>
-    <ons-tab persistent icon="search" page="search.html" label="search"></ons-tab>
     <ons-tab persistent icon="history" page="history.html" label="history" active="true"></ons-tab>
   </ons-tabbar>
-  <ons-bottom-toolbar>
-    <div class="center">
-      <ons-button modifier="large" id="markingBtn">
-        <ons-icon icon="map-marker" label="mark" size="28px"> Where am I?</ons-icon>
-      </ons-button>
-    </div>
-  </ons-bottom-toolbar>
 </ons-page>
 
 <ons-template id="kumap.html">
@@ -36,12 +29,13 @@
     <div id="map" style="width:100%; height:100%;">
       <div class="center" style="padding-top:30%;"><ons-icon size="35px" spin="true" icon="ion-load-d"></ons-icon> now create map... </div>
     </div>
-  </ons-page>
-</ons-template>
-
-<ons-template id="search.html">
-  <ons-page>
-    <div>map</div>
+    <ons-bottom-toolbar>
+      <div id="kumapFooter" class="center">
+        <ons-button modifier="large" id="markingBtn">
+          <ons-icon icon="map-marker" label="mark" size="28px"> Where am I?</ons-icon>
+        </ons-button>
+      </div>
+    </ons-bottom-toolbar>
   </ons-page>
 </ons-template>
 
@@ -58,9 +52,8 @@ ons.bootstrap();
 function initGmap() {
   tabbar.setActiveTab(0);
   setTimeout(function() {createMap("map");}, 100);
-  
   if(navigator.geolocation) {
-    $("#markingBtn").on("click", function() {
+    $(document).on("click", "#markingBtn", function() {
       startLoading("#markingBtn");
       setTimeout(
         function() {
@@ -71,6 +64,7 @@ function initGmap() {
   } else {
     $("#markingBtn").html("GPS非対応");
   }
+    console.log($("div#kumapFooter").height());
 }
 
 var optionObj = {
@@ -125,7 +119,7 @@ function zeroPadding(val, len) {
 
 function startLoading(selector) {
   var cover = $("<div id='loading' class='loadingCover'>");
-  cover.append($("<div class='loadingIcon'>").append($("<ons-icon class='fa fa-spinner loadingChr' spin='true'>")));
+  cover.append($("<div class='loadingIcon'>").append($("<ons-icon class='fa fa-cog loadingChr' spin='true'>")));
   
   $("body").prepend(cover);
   var markingBtn = ons.findComponent(selector, document.body);
